@@ -1,0 +1,3 @@
+spaceorbust/settings.py
+*.pyc
+*.sqlite3
