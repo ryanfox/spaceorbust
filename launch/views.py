@@ -14,6 +14,28 @@ class GameView(generic.DetailView):
     model = Game
     template_name = 'launch/game.html'
 
+def initializedeck(drawpile):
+    """Initialize a deck.  All cards start in the draw pile initially."""
+    for suit in Card.suits:
+        createcard(suit[0], 1, drawpile)
+        createcard(suit[0], 1, drawpile)
+        createcard(suit[0], 1, drawpile)
+        createcard(suit[0], 2, drawpile)
+        createcard(suit[0], 2, drawpile)
+        createcard(suit[0], 3, drawpile)
+        createcard(suit[0], 3, drawpile)
+        createcard(suit[0], 5, drawpile)
+        createcard(suit[0], 4, drawpile)
+        createcard(suit[0], 5, drawpile)
+
+def createcard(suit, number, hand):
+    """Create a card belonging to the specified hand, with given suit and value."""
+    c = Card()
+    c.suit = suit
+    c.number = number
+    c.hand = hand
+    c.save()
+
 @login_required
 def create(request):
     g = Game()
@@ -22,6 +44,7 @@ def create(request):
     drawpile = Hand()
     drawpile.game = g
     drawpile.save()
+    initializedeck(drawpile)
     
     discardpile = Hand()
     discardpile.game = g

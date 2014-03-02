@@ -2,4 +2,9 @@
 
 {% block content %}
     <h1>You are viewing game #{{ object.id }}.</h1>
+    
+    {% for card in object.drawpile.card_set.all %}
+        <p>Draw Pile:</p>
+        <p>{{ card.get_suit_display }} {{ card.number }}</p>
+    {% endfor %}
 {% endblock %}

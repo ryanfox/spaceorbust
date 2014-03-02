@@ -23,17 +23,18 @@ class Hand(models.Model):
     game = models.ForeignKey(Game)
 
 
-class Suit(models.Model):
-    suits = (('CM', 'Command Module'),
-             ('LS', 'Life Support'),
-             ('SN', 'Sensors'),
-             ('FT', 'Fuel Tanks'),
-             ('EN', 'Engines'))
-    suit = models.CharField(max_length=2, choices=suits)
-
-
 class Card(models.Model):
-    suit = models.ForeignKey(Suit)
+    COMMAND = 'CM'
+    LIFESUPPORT = 'LS'
+    SENSORS = 'SN'
+    FUELTANKS = 'FT'
+    ENGINES = 'EN'
+    suits = ((COMMAND, 'Command Module'),
+             (LIFESUPPORT, 'Life Support'),
+             (SENSORS, 'Sensors'),
+             (FUELTANKS, 'Fuel Tanks'),
+             (ENGINES, 'Engines'))
+    suit = models.CharField(max_length=2, choices=suits)
     number = models.IntegerField(default=1)
     hand = models.ForeignKey(Hand)
 
