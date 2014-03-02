@@ -24,7 +24,7 @@ def initializedeck(drawpile):
         createcard(suit[0], 2, drawpile)
         createcard(suit[0], 3, drawpile)
         createcard(suit[0], 3, drawpile)
-        createcard(suit[0], 5, drawpile)
+        createcard(suit[0], 4, drawpile)
         createcard(suit[0], 4, drawpile)
         createcard(suit[0], 5, drawpile)
 
