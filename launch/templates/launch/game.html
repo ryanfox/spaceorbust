@@ -3,8 +3,33 @@
 {% block content %}
     <h1>You are viewing game #{{ object.id }}.</h1>
     
-    <p>Draw Pile:</p>
-    {% for card in object.drawpile.card_set.all %}
-        <p>{{ card.get_suit_display }} {{ card.number }}</p>
-    {% endfor %}
+    <h3>Launch Pad:</h3>
+    <p>Command module {{ command }}</p>
+    <p>Life Support {{ lifesupport }}</p>
+    <p>Sensors {{ sensors }}</p>
+    <p>Fuel Tanks {{ fueltanks }}</p>
+    <p>Engines {{ engines }}</p>
+    
+    <h3>Hands:</h3>
+    <table border=1>
+        <tr><td>Player</td><td>Card 1</td><td>Card 2</td><td>Card 3</td><td>Card 4</td><td>Card 5</td></tr>
+            {% for player in object.otherplayers %}
+                <tr><td>0 {{ player.username }}</td>
+                {% for hand in object.hand_set.all %}
+                    {% if hand.player.username == player.username %}
+                        {% for card in hand.card_set.all %}
+                            <td>{{ card.get_suit_display }} {{ card.number }}</td>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
+    </table>
+    
+    
+    <p>Draw Pile: {{ object.drawpile.card_set.count }} cards remaining</p>
+    <p>Discard Pile: {{ object.discardpile.card_set.count }} cards</p>
+    <p>{{ object.clocks }} clocks remaining</p>
+    <p>{{ object.fuses }} fuses remaining<p>
 {% endblock %}

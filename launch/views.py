@@ -14,6 +14,19 @@ class GameView(generic.DetailView):
     model = Game
     template_name = 'launch/game.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(GameView, self).get_context_data(**kwargs)
+        context['commandmodule'] = self.object.launchpad.card_set.filter(suit=Card.COMMAND).count()
+        context['lifesupport'] = self.object.launchpad.card_set.filter(suit=Card.LIFESUPPORT).count()
+        context['sensors'] = self.object.launchpad.card_set.filter(suit=Card.SENSORS).count()
+        context['fueltanks'] = self.object.launchpad.card_set.filter(suit=Card.FUELTANKS).count()
+        context['engines'] = self.object.launchpad.card_set.filter(suit=Card.ENGINES).count()
+        
+        for hand in self.object.hand_set.exclude(player=None).exclude(player=self.request.user):
+            context[hand.player.username] = hand.card_set.all()
+        
+        return context
+
 def initializedeck(drawpile):
     """Initialize a deck.  All cards start in the draw pile initially."""
     for suit in Card.suits:
@@ -35,6 +48,14 @@ def createcard(suit, number, hand):
     c.number = number
     c.hand = hand
     c.save()
+
+def deal(game):
+    """Deal 5 cards to each player in the game."""
+    for player in game.players.all():
+        cards = game.drawpile.card_set.all().order_by('?')[:5]
+        for card in cards:
+            card.hand = game.hand_set.filter(player=player).get()
+            card.save()
 
 @login_required
 def create(request):
@@ -59,4 +80,11 @@ def create(request):
     g.launchpad = launchpad
     g.players.add(request.user)
     g.save()
+    
+    h = Hand()
+    h.player = request.user
+    h.game = g
+    h.save()
+
+    deal(g)
     return HttpResponseRedirect(reverse('launch:game', args=(g.id,)))

@@ -17,7 +17,7 @@ class Hand(models.Model):
     draw pile, discard pile, and launch pad also count as 'hands'."""
     def isvisible(self, player):
         """Is this hand visible to the specified player?"""
-        return (self.player is None) or (self.player != player)
+        return self.game.drawpile != self and self.player != player
     
     player = models.ForeignKey(User, null=True)
     game = models.ForeignKey(Game)
