@@ -13,10 +13,11 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('clocks', self.gf('django.db.models.fields.IntegerField')(default=8)),
             ('fuses', self.gf('django.db.models.fields.IntegerField')(default=3)),
-            ('drawpile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], related_name='drawpile', null=True)),
-            ('discardpile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], related_name='discardpile', null=True)),
-            ('launchpad', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], related_name='launchpad', null=True)),
+            ('drawpile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], null=True, related_name='drawpile')),
+            ('discardpile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], null=True, related_name='discardpile')),
+            ('launchpad', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Hand'], null=True, related_name='launchpad')),
             ('ispublic', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('turn', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, related_name='turn')),
         ))
         db.send_create_signal('launch', ['Game'])
 
@@ -77,11 +78,11 @@ class Migration(SchemaMigration):
         'auth.group': {
             'Meta': {'object_name': 'Group'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '80', 'unique': 'True'}),
             'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'blank': 'True', 'symmetrical': 'False'})
         },
         'auth.permission': {
-            'Meta': {'object_name': 'Permission', 'unique_together': "(('content_type', 'codename'),)", 'ordering': "('content_type__app_label', 'content_type__model', 'codename')"},
+            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
             'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -92,7 +93,7 @@ class Migration(SchemaMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'blank': 'True', 'max_length': '75'}),
             'first_name': ('django.db.models.fields.CharField', [], {'blank': 'True', 'max_length': '30'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'related_name': "'user_set'", 'symmetrical': 'False', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'blank': 'True', 'symmetrical': 'False', 'related_name': "'user_set'"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -100,11 +101,11 @@ class Migration(SchemaMigration):
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'blank': 'True', 'max_length': '30'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'related_name': "'user_set'", 'symmetrical': 'False', 'blank': 'True'}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'blank': 'True', 'symmetrical': 'False', 'related_name': "'user_set'"}),
+            'username': ('django.db.models.fields.CharField', [], {'max_length': '30', 'unique': 'True'})
         },
         'contenttypes.contenttype': {
-            'Meta': {'object_name': 'ContentType', 'unique_together': "(('app_label', 'model'),)", 'ordering': "('name',)", 'db_table': "'django_content_type'"},
+            'Meta': {'db_table': "'django_content_type'", 'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType'},
             'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
@@ -120,13 +121,14 @@ class Migration(SchemaMigration):
         'launch.game': {
             'Meta': {'object_name': 'Game'},
             'clocks': ('django.db.models.fields.IntegerField', [], {'default': '8'}),
-            'discardpile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'related_name': "'discardpile'", 'null': 'True'}),
-            'drawpile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'related_name': "'drawpile'", 'null': 'True'}),
+            'discardpile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'null': 'True', 'related_name': "'discardpile'"}),
+            'drawpile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'null': 'True', 'related_name': "'drawpile'"}),
             'fuses': ('django.db.models.fields.IntegerField', [], {'default': '3'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ispublic': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'launchpad': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'related_name': "'launchpad'", 'null': 'True'}),
-            'players': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'symmetrical': 'False'})
+            'launchpad': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Hand']", 'null': 'True', 'related_name': "'launchpad'"}),
+            'players': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'symmetrical': 'False'}),
+            'turn': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'related_name': "'turn'"})
         },
         'launch.hand': {
             'Meta': {'object_name': 'Hand'},

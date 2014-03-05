@@ -1,31 +1,45 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views import generic
 
+from launch.forms import *
 from launch.models import *
 
 
 def index(request):
     return HttpResponse('Hello, world')
 
-class GameView(generic.DetailView):
-    model = Game
-    template_name = 'launch/game.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(GameView, self).get_context_data(**kwargs)
-        context['commandmodule'] = self.object.launchpad.card_set.filter(suit=Card.COMMAND).count()
-        context['lifesupport'] = self.object.launchpad.card_set.filter(suit=Card.LIFESUPPORT).count()
-        context['sensors'] = self.object.launchpad.card_set.filter(suit=Card.SENSORS).count()
-        context['fueltanks'] = self.object.launchpad.card_set.filter(suit=Card.FUELTANKS).count()
-        context['engines'] = self.object.launchpad.card_set.filter(suit=Card.ENGINES).count()
+def game(request, pk):
+    g = get_object_or_404(Game, pk=pk)
+    if request.method == 'POST':
+        form = InviteForm(request.POST)
+        if form.is_valid():
+            u = get_object_or_404(User, username=form.cleaned_data['username'])
+            import pdb;pdb.set_trace()
+            if u is not None and not u in g.players.all():
+                g.players.add(u)
+                g.save()
+                
+                h = Hand()
+                h.game = g
+                h.player = u
+                h.save()
+    else:
+        form = InviteForm()
         
-        for hand in self.object.hand_set.exclude(player=None).exclude(player=self.request.user):
-            context[hand.player.username] = hand.card_set.all()
-        
-        return context
+    context = {'game': g}
+    context['form'] = form
+    context['commandmodule'] = g.launchpad.card_set.filter(suit=Card.COMMAND).count()
+    context['lifesupport'] = g.launchpad.card_set.filter(suit=Card.LIFESUPPORT).count()
+    context['sensors'] = g.launchpad.card_set.filter(suit=Card.SENSORS).count()
+    context['fueltanks'] = g.launchpad.card_set.filter(suit=Card.FUELTANKS).count()
+    context['engines'] = g.launchpad.card_set.filter(suit=Card.ENGINES).count()
+    
+    context['hands'] = [hand for hand in g.hand_set.exclude(player=None).exclude(player=request.user)]
+    return render(request, 'launch/game.html', context)
 
 def initializedeck(drawpile):
     """Initialize a deck.  All cards start in the draw pile initially."""
@@ -49,16 +63,9 @@ def createcard(suit, number, hand):
     c.hand = hand
     c.save()
 
-def deal(game):
-    """Deal 5 cards to each player in the game."""
-    for player in game.players.all():
-        cards = game.drawpile.card_set.all().order_by('?')[:5]
-        for card in cards:
-            card.hand = game.hand_set.filter(player=player).get()
-            card.save()
-
 @login_required
 def create(request):
+    """Create a new game.  Initially only has one player."""
     g = Game()
     g.save()
 
@@ -86,5 +93,19 @@ def create(request):
     h.game = g
     h.save()
 
-    deal(g)
     return HttpResponseRedirect(reverse('launch:game', args=(g.id,)))
+
+@login_required
+def deal(request, pk):
+    """Deal 5 cards to each player in the game."""
+    game = get_object_or_404(Game, pk=pk)
+    if game.turn == None:
+        for player in game.players.all():
+            cards = game.drawpile.card_set.all().order_by('?')[:5]
+            for card in cards:
+                card.hand = game.hand_set.filter(player=player).get()
+                card.save()
+
+        game.turn = game.players.all().order_by('?')[0]
+        game.save()
+    return HttpResponseRedirect(reverse('launch:game', args=(game.id,)))

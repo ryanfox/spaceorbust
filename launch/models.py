@@ -10,6 +10,7 @@ class Game(models.Model):
     launchpad = models.ForeignKey('Hand', related_name='launchpad', null=True)
     ispublic = models.BooleanField(default=True)
     players = models.ManyToManyField(User)
+    turn = models.ForeignKey(User, related_name='turn', null=True)
 
     
 class Hand(models.Model):
