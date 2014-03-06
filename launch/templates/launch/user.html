@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>User #{{ user.id }}</h3>
+    <h3>{{ user.username }}</h3>
+    <h4>Average score: {{ average }}</h4>
+    
+    <p>Current games:</p>
+    <table>
+    {% for game in currentgames %}
+        {% comment %} Number of players, whose turn, current score? {% endcomment %}
+    {% endfor %}
+    </table>
+    <p>Invites pending:</p>
+    <table>
+    {% for invite in invites %}
+        <tr><td><a href="">Game id</a></td><td><a href="">Accept</a></td><td><a href="">Decline</a></td></tr>
+    {% endfor %}
+    </table>
+{% endblock %}

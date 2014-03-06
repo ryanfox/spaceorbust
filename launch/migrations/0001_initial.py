@@ -33,7 +33,7 @@ class Migration(SchemaMigration):
         # Adding model 'Hand'
         db.create_table('launch_hand', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('player', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True)),
+            ('player', self.gf('django.db.models.fields.related.ForeignKey')(null=True, to=orm['auth.User'])),
             ('game', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Game'])),
         ))
         db.send_create_signal('launch', ['Hand'])
@@ -56,6 +56,15 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('launch', ['Note'])
 
+        # Adding model 'Invite'
+        db.create_table('launch_invite', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('game', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['launch.Game'])),
+            ('invitee', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], related_name='invitee')),
+            ('inviter', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], related_name='inviter')),
+        ))
+        db.send_create_signal('launch', ['Invite'])
+
 
     def backwards(self, orm):
         # Deleting model 'Game'
@@ -73,16 +82,19 @@ class Migration(SchemaMigration):
         # Deleting model 'Note'
         db.delete_table('launch_note')
 
+        # Deleting model 'Invite'
+        db.delete_table('launch_invite')
+
 
     models = {
         'auth.group': {
             'Meta': {'object_name': 'Group'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '80', 'unique': 'True'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'blank': 'True', 'symmetrical': 'False'})
+            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'to': "orm['auth.Permission']", 'symmetrical': 'False'})
         },
         'auth.permission': {
-            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
+            'Meta': {'object_name': 'Permission', 'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)"},
             'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -93,7 +105,7 @@ class Migration(SchemaMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'blank': 'True', 'max_length': '75'}),
             'first_name': ('django.db.models.fields.CharField', [], {'blank': 'True', 'max_length': '30'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'blank': 'True', 'symmetrical': 'False', 'related_name': "'user_set'"}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'user_set'", 'to': "orm['auth.Group']", 'symmetrical': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -101,11 +113,11 @@ class Migration(SchemaMigration):
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'blank': 'True', 'max_length': '30'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'blank': 'True', 'symmetrical': 'False', 'related_name': "'user_set'"}),
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'user_set'", 'to': "orm['auth.Permission']", 'symmetrical': 'False'}),
             'username': ('django.db.models.fields.CharField', [], {'max_length': '30', 'unique': 'True'})
         },
         'contenttypes.contenttype': {
-            'Meta': {'db_table': "'django_content_type'", 'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType'},
+            'Meta': {'object_name': 'ContentType', 'db_table': "'django_content_type'", 'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)"},
             'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
@@ -134,7 +146,14 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Hand'},
             'game': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Game']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'player': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'})
+            'player': ('django.db.models.fields.related.ForeignKey', [], {'null': 'True', 'to': "orm['auth.User']"})
+        },
+        'launch.invite': {
+            'Meta': {'object_name': 'Invite'},
+            'game': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['launch.Game']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'invitee': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'related_name': "'invitee'"}),
+            'inviter': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'related_name': "'inviter'"})
         },
         'launch.note': {
             'Meta': {'object_name': 'Note'},

@@ -109,3 +109,12 @@ def deal(request, pk):
         game.turn = game.players.all().order_by('?')[0]
         game.save()
     return HttpResponseRedirect(reverse('launch:game', args=(game.id,)))
+
+
+def user(request, pk):
+    u = get_object_or_404(User, pk=pk)
+    return render(request, 'launch/user.html', {'user': u})
+
+
+
+

@@ -45,3 +45,11 @@ class Note(models.Model):
     text = models.TextField()
     card = models.ForeignKey(Card)
     user = models.ForeignKey(User)
+
+
+class Invite(models.Model):
+    """Invite a player to a game"""
+    game = models.ForeignKey(Game)
+    invitee = models.ForeignKey(User, related_name='invitee')
+    inviter = models.ForeignKey(User, related_name='inviter')
+
