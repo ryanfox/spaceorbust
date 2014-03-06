@@ -5,16 +5,29 @@
     <h3>{{ user.username }}</h3>
     <h4>Average score: {{ average }}</h4>
     
+
+    {% if invites %}
+        <p>Invites pending:</p>
+        <table border=1>
+        {% for invite in invites %}
+            <tr><td><a href="">Game #{{ invite.game.pk }}</a></td><td><a href="{% url 'launch:accept' invite.pk %}">Accept</a></td><td><a href="{% url 'launch:decline' invite.pk %}">Decline</a></td></tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+    
+
     <p>Current games:</p>
-    <table>
+    <table border=1>
+    <tr><td>Game #</td><td># Players</td><td>Current move</td><td>Score</td><td>Cards remaining</td></tr>
     {% for game in currentgames %}
-        {% comment %} Number of players, whose turn, current score? {% endcomment %}
+        <tr><td><a href="{% url 'launch:game' game.pk %}">{{ game.pk }}</a></td><td>{{ game.players.count }}</td><td>{% if game.turn.user != None %}{{ game.turn.user.username }}{% else %}Not started{% endif %}</td><td>{{ game.launchpad.card_set.count }}</td><td>{{ game.drawpile.card_set.count }}</td></tr>
     {% endfor %}
-    </table>
-    <p>Invites pending:</p>
-    <table>
-    {% for invite in invites %}
-        <tr><td><a href="">Game id</a></td><td><a href="">Accept</a></td><td><a href="">Decline</a></td></tr>
+    </table>    
+    
+    <p>Completed games:</p>
+    <table border=1>
+    {% for game in completedgames %}
+        <tr><td>Game #{{ game.pk }}</td><td># players</td>><td>score</td></tr>
     {% endfor %}
     </table>
 {% endblock %}

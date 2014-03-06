@@ -4,7 +4,7 @@
     <h1>You are viewing game #{{ game.id }}.</h1>
     
     <h3>Launch Pad:</h3>
-    <p>Command module {{ command }}</p>
+    <p>Command module {{ commandmodule }}</p>
     <p>Life Support {{ lifesupport }}</p>
     <p>Sensors {{ sensors }}</p>
     <p>Fuel Tanks {{ fueltanks }}</p>
@@ -20,7 +20,9 @@
                     {% endfor %}
                 </tr>
             {% endfor %}
-            <tr><td>You</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+            {% if user in game.players.all %}
+                <tr><td>You</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+            {% endif %}
             </tr>
     </table>
     
@@ -29,7 +31,7 @@
     <p>Discard Pile: {{ game.discardpile.card_set.count }} cards</p>
     <p>{{ game.clocks }} clocks remaining</p>
     <p>{{ game.fuses }} fuses remaining<p>
-    {% if gameturn == null %}
+    {% if user.is_authenticated and not turn %}
         <br/><br/>
         <p>Invite player:</p>
         <form action="{% url 'launch:game' game.pk %}" method="post">{% csrf_token %}
@@ -37,5 +39,9 @@
             <input type="submit" value="Add" />
         </form>
         <p><a href="{% url 'launch:deal' game.pk %}">Deal!</a>
+    {% elif user.is_authenticated and user == turn %}
+        <p>Give a hint</p>
+        <p>Discard</p>
+        <p>Play a card</p>
     {% endif %}
 {% endblock %}

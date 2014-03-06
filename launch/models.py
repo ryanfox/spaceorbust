@@ -11,6 +11,14 @@ class Game(models.Model):
     ispublic = models.BooleanField(default=True)
     players = models.ManyToManyField(User)
     turn = models.ForeignKey(User, related_name='turn', null=True)
+    
+    def isstarted(self):
+        """Has the game been dealt?"""
+        return self.drawpile.card_set.count() == 50
+    
+    def isdone(self):
+        """Is the game done?"""
+        return (self.drawpile.card_set.count() == 0 and self.turn == None) or self.fuses == 0
 
     
 class Hand(models.Model):
@@ -49,7 +57,13 @@ class Note(models.Model):
 
 class Invite(models.Model):
     """Invite a player to a game"""
+    PENDING = 'PN'
+    ACCEPTED = 'AC'
+    REJECTED = 'RJ'
+    status = ((PENDING, 'Pending'),
+              (ACCEPTED, 'Accepted'),
+              (REJECTED, 'Rejected'))
     game = models.ForeignKey(Game)
     invitee = models.ForeignKey(User, related_name='invitee')
     inviter = models.ForeignKey(User, related_name='inviter')
-
+    status = models.CharField(max_length=2, choices=status, default=PENDING)

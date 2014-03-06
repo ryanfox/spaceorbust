@@ -10,25 +10,25 @@ from launch.models import *
 
 
 def index(request):
-    return HttpResponse('Hello, world')
+    return HttpResponse('Hello, world. This is the launch index')
 
 def game(request, pk):
+    """Summary page for a game"""
     g = get_object_or_404(Game, pk=pk)
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.is_authenticated():
         form = InviteForm(request.POST)
-        if form.is_valid():
+        if form.is_valid() and g.players.count() < 5:
             u = get_object_or_404(User, username=form.cleaned_data['username'])
-            import pdb;pdb.set_trace()
             if u is not None and not u in g.players.all():
-                g.players.add(u)
-                g.save()
+                i = Invite()
+                i.inviter = request.user
+                i.invitee = u
+                i.game = g
+                i.status = Invite.PENDING
+                i.save()
                 
-                h = Hand()
-                h.game = g
-                h.player = u
-                h.save()
-    else:
-        form = InviteForm()
+    # reset form
+    form = InviteForm()
         
     context = {'game': g}
     context['form'] = form
@@ -38,7 +38,15 @@ def game(request, pk):
     context['fueltanks'] = g.launchpad.card_set.filter(suit=Card.FUELTANKS).count()
     context['engines'] = g.launchpad.card_set.filter(suit=Card.ENGINES).count()
     
-    context['hands'] = [hand for hand in g.hand_set.exclude(player=None).exclude(player=request.user)]
+    hands = g.hand_set.exclude(player=None)
+    if request.user.is_authenticated():
+        hands = hands.exclude(player=request.user)
+        context['turn'] = g.turn
+        if g.turn == request.user:
+            # TODO add hint, discard
+            pass
+    
+    context['hands'] = hands
     return render(request, 'launch/game.html', context)
 
 def initializedeck(drawpile):
@@ -98,23 +106,70 @@ def create(request):
 @login_required
 def deal(request, pk):
     """Deal 5 cards to each player in the game."""
-    game = get_object_or_404(Game, pk=pk)
-    if game.turn == None:
-        for player in game.players.all():
-            cards = game.drawpile.card_set.all().order_by('?')[:5]
+    g = get_object_or_404(Game, pk=pk)
+    if g.turn == None:
+        for player in g.players.all():
+            cards = g.drawpile.card_set.all().order_by('?')[:5]
             for card in cards:
-                card.hand = game.hand_set.filter(player=player).get()
+                card.hand = g.hand_set.filter(player=player).get()
                 card.save()
 
-        game.turn = game.players.all().order_by('?')[0]
-        game.save()
-    return HttpResponseRedirect(reverse('launch:game', args=(game.id,)))
-
+        g.turn = g.players.all().order_by('?')[0]
+        g.save()
+    return HttpResponseRedirect(reverse('launch:game', args=(g.id,)))
 
 def user(request, pk):
+    """Get a user's summary page.  Show current games, completed games, scores,
+    average score, average # players, etc.
+    """
     u = get_object_or_404(User, pk=pk)
-    return render(request, 'launch/user.html', {'user': u})
+    context = {'user': u}
+    if request.user.is_authenticated() and request.user.id == int(pk):
+        context['invites'] = Invite.objects.filter(invitee=u).filter(status=Invite.PENDING)
+    allgames = u.game_set.all()
+    context['currentgames'] = [g for g in allgames if not g.isdone()]
+    context['completedgames'] = [g for g in allgames if g.isdone()]
+    return render(request, 'launch/user.html', context)
 
+@login_required
+def accept(request, pk):
+    """Accept a game invite"""
+    i = get_object_or_404(Invite, pk=pk)
+    if i.invitee == request.user:
+        i.status = Invite.ACCEPTED
+        i.save()
+        
+        g = i.game
+        g.players.add(request.user)
+        g.save()
+                
+        h = Hand()
+        h.game = g
+        h.player = i.invitee
+        h.save()
+    return HttpResponseRedirect(reverse('launch:game', args=(i.game.id,)))
 
+@login_required
+def decline(request, pk):
+    """Decline a game invite"""
+    i = get_object_or_404(Invite, pk=pk)
+    if i.invitee == request.user:
+        i.status = Invite.REJECTED
+        i.save()
+    return HttpResponseRedirect(reverse('launch:user', args=(i.invitee.id,)))
 
+@login_required
+def givehint(request):
+    """Give a player a hint about their cards."""
+    raise NotImplementedError # TODO implement
+
+@login_required
+def discard(request):
+    """Discard a card."""
+    raise NotImplementedError # TODO implement
+
+@login_required
+def play(request):
+    """Play a card."""
+    raise NotImplementedError # TODO implement
 
