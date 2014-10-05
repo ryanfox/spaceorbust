@@ -1,0 +1,4 @@
+{% for score in game.score_set.all %}
+	{{ score.player.username }}: {{ score.score }}<br/>
+{% endfor %}
+{{ game.turn.username }}'s turn
